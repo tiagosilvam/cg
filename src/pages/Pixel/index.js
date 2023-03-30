@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Content, Alert, Input, Canvas, Button, Title } from "./styles.js";
 
 import { Alert as Msg, Stack } from "@mui/material";
+import { inp_to_ndc, ndc_to_dc, ndc_to_user, user_to_ndc } from '../functions'
 
 export const Pixel = () => {
   const [posX, setPosX] = useState();
@@ -52,47 +53,6 @@ export const Pixel = () => {
     );
   };
 
-  // Início algoritmos
-  const LARGURA = 800;
-  const ALTURA = 600;
-
-  const INTERVALO_X_NDC = [-1, 1];
-  const INTERVALO_Y_NDC = [-1, 1];
-
-  const INTERVALO_X_DC = [0, LARGURA];
-  const INTERVALO_Y_DC = [0, ALTURA];
-
-  function to_ndc(ponto, intervalo_x, intervalo_y) {
-    let [x, y] = ponto;
-    let [xmin, xmax] = intervalo_x;
-    let [ymin, ymax] = intervalo_y;
-    let [ndcxmin, ndcxmax] = INTERVALO_X_NDC;
-    let [ndcymin, ndcymax] = INTERVALO_Y_NDC;
-
-    // fórmula completa para calcular o NDC
-    let ndcx = ((x - xmin) * (ndcxmax - ndcxmin)) / (xmax - xmin) + ndcxmin;
-    let ndcy = ((y - ymin) * (ndcymax - ndcymin)) / (ymax - ymin) + ndcymin;
-
-    // fórmula reduzida do NDC
-    let ndcx_aux = (x - xmin) / (xmax - xmin);
-    let ndcy_aux = (y - ymin) / (ymax - ymin);
-
-    return [ndcx, ndcy, ndcx_aux, ndcy_aux];
-  }
-
-  function to_coordinates(ponto, intervalo_x, intervalo_y) {
-    let [ndcx, ndcy, ndcx_aux, ndcy_aux] = ponto;
-    let [xmin, xmax] = intervalo_x;
-    let [ymin, ymax] = intervalo_y;
-    let [ndh, ndv] = [xmax - xmin, ymax - ymin];
-
-    let dcx = Math.round(ndcx_aux * (ndh - 1));
-    let dcy = Math.round(ndcy_aux * (ndv - 1));
-
-    return [dcx, dcy];
-  }
-  // Fim algoritmos
-
   const setLines = (ctx) => {
     // Traça os quadrantes
     ctx.strokeStyle = "#E9E9E9";
@@ -124,19 +84,19 @@ export const Pixel = () => {
         </Button>
         <label>
           inp_to_ndc:{" "}
-          {to_ndc([posX, posY], INTERVALO_X_DC, INTERVALO_Y_DC).join(", ")}
+          {inp_to_ndc([posX, posY]).join(", ")}
         </label>
         <label>
           ndc_to_user:{" "}
-          {/*to_coordinates([posX, posY], INTERVALO_X_USER, INTERVALO_Y_USER)*/}
+          {ndc_to_user([posX, posY]).join(", ")}
         </label>
         <label>
           user_to_ndc:{" "}
-          {/*to_ndc([posX, posY], INTERVALO_X_USER, INTERVALO_Y_USER)*/}
+          {user_to_ndc(posX, posY).join(", ")}
         </label>
         <label>
           ndc_to_dc:{" "}
-          {to_coordinates([posX, posY], INTERVALO_X_DC, INTERVALO_Y_DC).join(", ")}
+          {ndc_to_dc(posX, posY).join(", ")}
         </label>
       </Stack>
     </Content>
