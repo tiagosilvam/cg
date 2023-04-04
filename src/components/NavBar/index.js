@@ -2,19 +2,12 @@ import * as React from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import {
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-} from "@mui/material";
+import { Typography, Stack, Button } from "@mui/material";
 
 // Styled component
 import { Image } from "./styles.js";
 
 export const NavBar = () => {
-  const navItems = ["Pixel", "Reta", "Home"];
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -37,20 +30,11 @@ export const NavBar = () => {
           >
             Projeto Computação Gráfica
           </Typography>
-          <List
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-            }}
-          >
-            {navItems.map((item) => (
-              <ListItem key={item} disablePadding>
-                <ListItemButton sx={{ textAlign: "center" }} href={item.toLocaleLowerCase()}>
-                  <ListItemText primary={item} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+          <Stack direction="row">
+            <Button color="inherit" href="/">Pixel</Button>
+            <Button color="inherit" href="/reta">Reta</Button>
+            <Button color="inherit" href="/circunferencia">Circunferencia</Button>
+          </Stack>
         </Toolbar>
       </AppBar>
     </Box>

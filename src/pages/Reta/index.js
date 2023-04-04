@@ -1,141 +1,212 @@
-import { useRef, useState } from "react";
-
-// Styled components
+import { useEffect, useRef, useState } from "react";
 import {
-  Content,
-  Alert,
-  Input,
-  Canvas,
-  Button,
-  Title,
-} from "./styles.js";
-
-import { Alert as Msg, Stack } from "@mui/material";
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Stack,
+  Box,
+  Alert as Msg,
+} from "@mui/material";
+import { Content, Input, Button, Title, Alert } from "./styles";
+import { Canvas } from "../../components/Canvas";
 
 export const Reta = () => {
+  const canvasRef = useRef();
+  const [context, setContext] = useState(null);
   const [posX, setPosX] = useState();
   const [posY, setPosY] = useState();
   const [posX2, setPosX2] = useState();
   const [posY2, setPosY2] = useState();
-  const [error, setError] = useState();
-  const canvasRef = useRef();
+  const [message, setMessage] = useState();
+  const [value, setValue] = useState("DDA");
+  const pontos = [];
 
-  const desenharReta = () => {
-    /* 
-    // Algoritmo normal
-    let dx = posX2 - posX;
-    let dy = posY2 - posY;
-    let p = 2 * dy - dx;
-    let twoDy = 2 * dy;
-    let twoDyMinusDx = 2 * (dy - dx);
-    let x, y;
+  useEffect(() => {
+    const canvas = canvasRef.current;
 
-    if (posX > posX2) {
-      x = posX2;
-      y = posY2;
-      setPosX2(posX);
-    } else {
-      x = posX;
-      y = posY;
-    }
-    setPixel(x, y);
-    while (x < posX2) {
-      x++;
-      if (p < 0) {
-        p += twoDy;
+    const context = canvas.getContext("2d");
+    setContext(context);
+  }, [canvasRef]);
+
+  const handleChange = (event) => {
+    setValue(event.target.value);
+  };
+
+  const getRetaPontoMedio = () => {
+    if (checkError()) {
+      let x0 = posX,
+        y0 = posY,
+        xEnd = posX2,
+        yEnd = posY2;
+      let dx = Math.abs(xEnd - x0),
+        dy = Math.abs(yEnd - y0);
+      let p = 2 * dy - dx;
+      let twoDy = 2 * dy,
+        twoDyMinusDx = 2 * (dy - dx);
+      let x, y;
+
+      if (x0 > xEnd) {
+        x = xEnd;
+        y = yEnd;
+        xEnd = x0;
       } else {
-        y++;
-        p += twoDyMinusDx;
+        x = x0;
+        y = y0;
       }
       setPixel(x, y);
-    }
-    */
-
-    // Algoritmo ponto médio
-    let dx = posX2 - posX;
-    let dy = posY2 - posY;
-    let d = 2 * dy - dx;
-
-    let incE = 2 * dy;
-    let incNE = 2 * (dy - dx);
-
-    let x = posX;
-    let y = posY;
-    setPixel(x, y);
-
-    while (x < posX2) {
-      if (d <= 0) {
-        d = d + incE;
+      while (x < xEnd) {
         x++;
-      } else {
-        d = d + incNE;
-        x++;
-        y++;
+        if (p < 0) p += twoDy;
+        else {
+          y++;
+          p += twoDyMinusDx;
+        }
+        setPixel(x, y);
       }
-      setPixel(x, y);
+      setMessage({
+        type: "success",
+        text: "A reta com algoritmo do Ponto Médio foi desenhada.",
+      });
     }
+  };
+
+  const desenharRetaDDA = () => {
+    if (checkError()) {
+      let x0 = posX,
+        y0 = posY,
+        xEnd = posX2,
+        yEnd = posY2;
+      let dx = xEnd - x0,
+        dy = yEnd - y0,
+        steps,
+        k;
+
+      let xIncrement,
+        yIncrement,
+        x = x0,
+        y = y0;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        steps = Math.abs(dx);
+      } else {
+        steps = Math.abs(dy);
+      }
+      xIncrement = dx / steps;
+      yIncrement = dy / steps;
+      setPixel(Math.round(x), Math.round(y));
+      for (k = 0; k < steps; k++) {
+        x += xIncrement;
+        y += yIncrement;
+        setPixel(Math.round(x), Math.round(y));
+      }
+      setMessage({
+        type: "success",
+        text: "A reta com o algoritmo DDA foi desenhada.",
+      });
+      console.log(pontos);
+    }
+  };
+
+  const checkError = () => {
+    if (!posX || !posY || !posX2 || !posY2) {
+      setMessage({
+        type: "error",
+        text: "Informe os valores da reta.",
+      });
+      return false;
+    }
+    setLines();
+    return true;
   };
 
   const setPixel = (x, y) => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
     // Calcula centro da tela
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = 800 / 2;
+    const centerY = 600 / 2;
 
-    // Colocar pixel
-    //context.clearRect(0, 0, 800, 600);
-    setLines(context);
+    // Colocar pixels
     context.fillStyle = "red";
     context.fillRect(x + centerX, centerY - y, 1, 1);
-    setError(null);
   };
 
-  const setLines = (ctx) => {
+  const clear = () => {
+    context.clearRect(0, 0, 800, 600);
+    setMessage(null);
+  };
+
+  const setLines = () => {
     // Traça os quadrantes
-    ctx.strokeStyle = "#E9E9E9";
-    ctx.moveTo(0, 600 / 2);
-    ctx.lineTo(800, 600 / 2);
-    ctx.moveTo(800 / 2, 0);
-    ctx.lineTo(800 / 2, 600);
-    ctx.stroke();
+    context.strokeStyle = "#E9E9E9";
+    context.moveTo(0, 600 / 2);
+    context.lineTo(800, 600 / 2);
+    context.moveTo(800 / 2, 0);
+    context.lineTo(800 / 2, 600);
+    context.stroke();
   };
 
   return (
     <Content>
-      <Canvas width="800" height="600" ref={canvasRef} />
-      <Stack direction="column" spacing={1} ml={2}>
+      <Canvas innerRef={canvasRef} />
+      <Stack direction="column" spacing={2} ml={2}>
         <Title>Desenhar Reta</Title>
-        <Alert>{error && <Msg severity="error">{error}</Msg>}</Alert>
-        <Input
-          label="Valor da coordenada X"
-          size="small"
-          onChange={(e) => setPosX(e.target.value)}
-        />
-        <Input
-          label="Valor da coordenada Y"
-          size="small"
-          onChange={(e) => setPosY(e.target.value)}
-        />
-        <Input
-          label="Valor da coordenada X2"
-          size="small"
-          onChange={(e) => setPosX2(e.target.value)}
-        />
-        <Input
-          label="Valor da coordenada Y2"
-          size="small"
-          onChange={(e) => setPosY2(e.target.value)}
-        />
-        <Button
-          name="Test"
-          onClick={desenharReta}
-          variant="outlined"
-          title="Test"
-        >
-          Desenhar
-        </Button>
+        <FormControl>
+          <FormLabel>Selecione o algoritmo: </FormLabel>
+          <RadioGroup
+            row
+            defaultValue="DDA"
+            value={value}
+            onChange={handleChange}
+          >
+            <FormControlLabel control={<Radio />} label="DDA" value="DDA" />
+            <FormControlLabel
+              control={<Radio />}
+              label="Ponto-Médio"
+              value="PM"
+            />
+          </RadioGroup>
+        </FormControl>
+        <Alert>
+          {message && <Msg severity={message.type}>{message.text}</Msg>}
+        </Alert>
+        <Box>
+          <Input
+            label="Valor da coordenada X"
+            size="small"
+            onChange={(e) => setPosX(parseFloat(e.target.value))}
+          />
+          <Input
+            style={{ marginLeft: 6 }}
+            label="Valor da coordenada Y"
+            size="small"
+            onChange={(e) => setPosY(parseFloat(e.target.value))}
+          />
+        </Box>
+        <Box>
+          <Input
+            label="Valor da coordenada X2"
+            size="small"
+            onChange={(e) => setPosX2(parseFloat(e.target.value))}
+          />
+          <Input
+            style={{ marginLeft: 6 }}
+            label="Valor da coordenada Y2"
+            size="small"
+            onChange={(e) => setPosY2(parseFloat(e.target.value))}
+          />
+        </Box>
+        <Box>
+          <Button
+            onClick={value === "DDA" ? desenharRetaDDA : getRetaPontoMedio}
+            variant="outlined"
+          >
+            Desenhar
+          </Button>
+          <Button variant="outlined" onClick={clear} style={{ marginLeft: 6 }}>
+            Limpar
+          </Button>
+        </Box>
       </Stack>
     </Content>
   );
