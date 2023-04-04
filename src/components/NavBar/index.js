@@ -8,7 +8,6 @@ import { Typography, Stack, Button } from "@mui/material";
 import { Image } from "./styles.js";
 
 export const NavBar = () => {
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar color="inherit">
@@ -31,9 +30,15 @@ export const NavBar = () => {
             Projeto Computação Gráfica
           </Typography>
           <Stack direction="row">
-            <Button color="inherit" href="/">Pixel</Button>
-            <Button color="inherit" href="/reta">Reta</Button>
-            <Button color="inherit" href="/circunferencia">Circunferencia</Button>
+            <Button color="inherit" href="/">
+              Pixel
+            </Button>
+            <Button color="inherit" href="/reta">
+              Reta
+            </Button>
+            <Button color="inherit" href="/circunferencia">
+              Circunferencia
+            </Button>
           </Stack>
         </Toolbar>
       </AppBar>

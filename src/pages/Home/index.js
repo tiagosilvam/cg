@@ -3,15 +3,11 @@ import { Stack, Box, Alert as Msg } from "@mui/material";
 import { Content, Input, Button, Title, Alert, Text } from "./styles";
 import { Canvas } from "../../components/Canvas";
 
-import {
-  inp_to_ndc,
-  ndc_to_dc,
-  user_to_ndc,
-} from "../../functions";
+import { inp_to_ndc, ndc_to_dc, user_to_ndc } from "../../functions";
 
 export const Home = () => {
   const canvasRef = useRef();
-  const [context, setContext] = useState(null);
+  const [canvasContext, setCanvasContext] = useState(null);
   const [posX, setPosX] = useState();
   const [posY, setPosY] = useState();
   const [message, setMessage] = useState();
@@ -19,43 +15,38 @@ export const Home = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    setContext(context);
+    setCanvasContext(context);
   }, [canvasRef]);
 
   const checkError = () => {
-    if (!posX || !posY) {
-      setMessage({
-        type: "error",
-        text: "Informe os valores do pixel.",
-      });
-      return false;
+    if (isNaN(posX) || isNaN(posY)) {
+      return Promise.reject("Informe os valores de X e Y.");
     }
-    // setLines();
-    return true;
+    return Promise.resolve("O pixel foi desenhado na tela.");
   };
 
-  // 
   const setPixel = () => {
-    if (checkError()) {
-      // Calcula centro da tela
-      const centerX = 800 / 2;
-      const centerY = 600 / 2;
+    // Calcula centro da tela
+    const centerX = 800 / 2;
+    const centerY = 600 / 2;
 
-      // Colocar pixels
-      context.fillStyle = "red";
-      context.fillRect(
-        posX + centerX,
-        centerY - posY,
-        1,
-        1
-      );
-      setMessage({ type: "success", text: "O pixel foi desenhado." });
-    }
+    // Colocar pixels
+    canvasContext.fillStyle = "red";
+    canvasContext.fillRect(posX + centerX, centerY - posY, 1, 1);
   };
 
   const clear = () => {
-    context.clearRect(0, 0, 800, 600);
+    canvasContext.clearRect(0, 0, 800, 600);
     setMessage(null);
+  };
+
+  const handleClick = () => {
+    checkError()
+      .then((msg) => {
+        setPixel();
+        setMessage({ type: "success", text: msg });
+      })
+      .catch((error) => setMessage({ type: "error", text: error }));
   };
 
   return (
@@ -80,7 +71,7 @@ export const Home = () => {
           />
         </Box>
         <Box>
-          <Button onClick={setPixel} variant="outlined">
+          <Button onClick={handleClick} variant="outlined">
             Desenhar
           </Button>
           <Button variant="outlined" onClick={clear} style={{ marginLeft: 6 }}>

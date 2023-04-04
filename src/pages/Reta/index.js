@@ -14,7 +14,7 @@ import { Canvas } from "../../components/Canvas";
 
 export const Reta = () => {
   const canvasRef = useRef();
-  const [context, setContext] = useState(null);
+  const [canvasContext, setCanvasContext] = useState(null);
   const [posX, setPosX] = useState();
   const [posY, setPosY] = useState();
   const [posX2, setPosX2] = useState();
@@ -27,7 +27,7 @@ export const Reta = () => {
     const canvas = canvasRef.current;
 
     const context = canvas.getContext("2d");
-    setContext(context);
+    setCanvasContext(context);
   }, [canvasRef]);
 
   const handleChange = (event) => {
@@ -35,90 +35,86 @@ export const Reta = () => {
   };
 
   const getRetaPontoMedio = () => {
-    if (checkError()) {
-      let x0 = posX,
-        y0 = posY,
-        xEnd = posX2,
-        yEnd = posY2;
-      let dx = Math.abs(xEnd - x0),
-        dy = Math.abs(yEnd - y0);
-      let p = 2 * dy - dx;
-      let twoDy = 2 * dy,
-        twoDyMinusDx = 2 * (dy - dx);
-      let x, y;
+    let x0 = posX,
+      y0 = posY,
+      xEnd = posX2,
+      yEnd = posY2;
+    let dx = Math.abs(xEnd - x0),
+      dy = Math.abs(yEnd - y0);
+    let p = 2 * dy - dx;
+    let twoDy = 2 * dy,
+      twoDyMinusDx = 2 * (dy - dx);
+    let x, y;
 
-      if (x0 > xEnd) {
-        x = xEnd;
-        y = yEnd;
-        xEnd = x0;
-      } else {
-        x = x0;
-        y = y0;
+    if (x0 > xEnd) {
+      x = xEnd;
+      y = yEnd;
+      xEnd = x0;
+    } else {
+      x = x0;
+      y = y0;
+    }
+    setPixel(x, y);
+    while (x < xEnd) {
+      x++;
+      if (p < 0) p += twoDy;
+      else {
+        y++;
+        p += twoDyMinusDx;
       }
       setPixel(x, y);
-      while (x < xEnd) {
-        x++;
-        if (p < 0) p += twoDy;
-        else {
-          y++;
-          p += twoDyMinusDx;
-        }
-        setPixel(x, y);
-      }
-      setMessage({
-        type: "success",
-        text: "A reta com algoritmo do Ponto Médio foi desenhada.",
-      });
     }
   };
 
   const desenharRetaDDA = () => {
-    if (checkError()) {
-      let x0 = posX,
-        y0 = posY,
-        xEnd = posX2,
-        yEnd = posY2;
-      let dx = xEnd - x0,
-        dy = yEnd - y0,
-        steps,
-        k;
+    let x0 = posX,
+      y0 = posY,
+      xEnd = posX2,
+      yEnd = posY2;
+    let dx = xEnd - x0,
+      dy = yEnd - y0,
+      steps,
+      k;
 
-      let xIncrement,
-        yIncrement,
-        x = x0,
-        y = y0;
+    let xIncrement,
+      yIncrement,
+      x = x0,
+      y = y0;
 
-      if (Math.abs(dx) > Math.abs(dy)) {
-        steps = Math.abs(dx);
-      } else {
-        steps = Math.abs(dy);
-      }
-      xIncrement = dx / steps;
-      yIncrement = dy / steps;
-      setPixel(Math.round(x), Math.round(y));
-      for (k = 0; k < steps; k++) {
-        x += xIncrement;
-        y += yIncrement;
-        setPixel(Math.round(x), Math.round(y));
-      }
-      setMessage({
-        type: "success",
-        text: "A reta com o algoritmo DDA foi desenhada.",
-      });
-      console.log(pontos);
+    if (Math.abs(dx) > Math.abs(dy)) {
+      steps = Math.abs(dx);
+    } else {
+      steps = Math.abs(dy);
     }
+    xIncrement = dx / steps;
+    yIncrement = dy / steps;
+    setPixel(Math.round(x), Math.round(y));
+    for (k = 0; k < steps; k++) {
+      x += xIncrement;
+      y += yIncrement;
+      setPixel(Math.round(x), Math.round(y));
+    }
+    console.log(pontos);
   };
 
   const checkError = () => {
-    if (!posX || !posY || !posX2 || !posY2) {
-      setMessage({
-        type: "error",
-        text: "Informe os valores da reta.",
-      });
-      return false;
+    if (isNaN(posX) || isNaN(posX2) || isNaN(posY) || isNaN(posY2)) {
+      return Promise.reject("Informe todos os valores de X e Y.");
+    } else if (
+      posX > 400 ||
+      posX2 > 400 ||
+      posY > 300 ||
+      posY2 > 300 ||
+      posX < -400 ||
+      posX2 < -400 ||
+      posY < -300 ||
+      posY2 < -300
+    ) {
+      return Promise.reject("Existem valores ultrapasando o limite da tela.");
     }
-    setLines();
-    return true;
+    return Promise.resolve(
+      `A reta foi desenhada usando o algorítmo de ${value}.`
+    );
   };
 
   const setPixel = (x, y) => {
@@ -127,23 +123,34 @@ export const Reta = () => {
     const centerY = 600 / 2;
 
     // Colocar pixels
-    context.fillStyle = "red";
-    context.fillRect(x + centerX, centerY - y, 1, 1);
+    canvasContext.fillStyle = "red";
+    canvasContext.fillRect(x + centerX, centerY - y, 1, 1);
   };
 
   const clear = () => {
-    context.clearRect(0, 0, 800, 600);
+    canvasContext.clearRect(0, 0, 800, 600);
+    canvasContext.beginPath();
     setMessage(null);
+  };
+
+  const handleClick = () => {
+    checkError()
+      .then((msg) => {
+        setLines();
+        value === "DDA" ? desenharRetaDDA() : getRetaPontoMedio();
+        setMessage({ type: "success", text: msg });
+      })
+      .catch((error) => setMessage({ type: "error", text: error }));
   };
 
   const setLines = () => {
     // Traça os quadrantes
-    context.strokeStyle = "#E9E9E9";
-    context.moveTo(0, 600 / 2);
-    context.lineTo(800, 600 / 2);
-    context.moveTo(800 / 2, 0);
-    context.lineTo(800 / 2, 600);
-    context.stroke();
+    canvasContext.strokeStyle = "#E9E9E9";
+    canvasContext.moveTo(0, 600 / 2);
+    canvasContext.lineTo(800, 600 / 2);
+    canvasContext.moveTo(800 / 2, 0);
+    canvasContext.lineTo(800 / 2, 600);
+    canvasContext.stroke();
   };
 
   return (
@@ -163,7 +170,7 @@ export const Reta = () => {
             <FormControlLabel
               control={<Radio />}
               label="Ponto-Médio"
-              value="PM"
+              value="Ponto Médio"
             />
           </RadioGroup>
         </FormControl>
@@ -197,10 +204,7 @@ export const Reta = () => {
           />
         </Box>
         <Box>
-          <Button
-            onClick={value === "DDA" ? desenharRetaDDA : getRetaPontoMedio}
-            variant="outlined"
-          >
+          <Button onClick={handleClick} variant="outlined">
             Desenhar
           </Button>
           <Button variant="outlined" onClick={clear} style={{ marginLeft: 6 }}>

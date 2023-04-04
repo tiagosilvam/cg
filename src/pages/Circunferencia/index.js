@@ -5,14 +5,14 @@ import { Canvas } from "../../components/Canvas";
 
 export const Circunferencia = () => {
   const canvasRef = useRef();
-  const [context, setContext] = useState(null);
+  const [canvasContext, setCanvasContext] = useState(null);
   const [raio, setRaio] = useState();
   const [message, setMessage] = useState();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    setContext(context);
+    setCanvasContext(context);
   }, [canvasRef]);
 
   const desenharPontoMedio = () => {
@@ -37,6 +37,16 @@ export const Circunferencia = () => {
     }
   };
 
+  const handleClick = () => {
+    checkError()
+      .then((msg) => {
+        setLines();
+        desenharPontoMedio();
+        setMessage({ type: "success", text: msg });
+      })
+      .catch((error) => setMessage({ type: "error", text: error }));
+  };
+
   const pontoCirculo = (x, y) => {
     setPixel(x, y);
     setPixel(y, x);
@@ -49,59 +59,40 @@ export const Circunferencia = () => {
   };
 
   const checkError = () => {
-    if (!raio || raio < 1) {
-      setMessage({
-        type: "error",
-        text: "Informe o valor do raio.",
-      });
-      return false;
-    } else if (raio < 1) {
-      setMessage({
-        type: "error",
-        text: "O raio não pode ser menor que 0.",
-      });
-      return false;
+    if (isNaN(raio)) {
+      return Promise.reject("Informe o raio do círculo.");
+    } else if (raio <= 0) {
+      return Promise.reject("O raio não pode ser menor ou igual a 0.");
     } else if (raio > 300) {
-      setMessage({
-        type: "error",
-        text: "O raio não pode ser maior que 300.",
-      });
-      return false;
+      return Promise.reject("O raio não pode ser maior que a tela.");
     }
-    setLines();
-    return true;
+    return Promise.resolve("O círculo foi desenhado.");
   };
 
-  //
   const setPixel = (x, y) => {
-    if (checkError()) {
-      // Calcula centro da tela
-      const centerX = 800 / 2;
-      const centerY = 600 / 2;
+    // Calcula centro da tela
+    const centerX = 800 / 2;
+    const centerY = 600 / 2;
 
-      // Colocar pixels
-      context.fillStyle = "red";
-      context.fillRect(x + centerX, centerY - y, 1, 1);
-      setMessage({
-        type: "success",
-        text: "O círculo foi desenhado pelo algoritmo de Ponto Médio.",
-      });
-    }
+    // Colocar pixels
+    canvasContext.fillStyle = "red";
+    canvasContext.fillRect(x + centerX, centerY - y, 1, 1);
   };
 
   const clear = () => {
-    context.clearRect(0, 0, 800, 600);
+    canvasContext.clearRect(0, 0, 800, 600);
+    canvasContext.beginPath();
     setMessage(null);
   };
 
   const setLines = () => {
     // Traça os quadrantes
-    context.strokeStyle = "#E9E9E9";
-    context.moveTo(0, 600 / 2);
-    context.lineTo(800, 600 / 2);
-    context.moveTo(800 / 2, 0);
-    context.lineTo(800 / 2, 600);
-    context.stroke();
+    canvasContext.strokeStyle = "#E9E9E9";
+    canvasContext.moveTo(0, 600 / 2);
+    canvasContext.lineTo(800, 600 / 2);
+    canvasContext.moveTo(800 / 2, 0);
+    canvasContext.lineTo(800 / 2, 600);
+    canvasContext.stroke();
   };
 
   return (
@@ -120,7 +111,7 @@ export const Circunferencia = () => {
           />
         </Box>
         <Box>
-          <Button onClick={desenharPontoMedio} variant="outlined">
+          <Button onClick={handleClick} variant="outlined">
             Desenhar
           </Button>
           <Button variant="outlined" onClick={clear} style={{ marginLeft: 6 }}>
